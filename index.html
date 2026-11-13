@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สคริปต์พิธีกร MPAT Annual Meeting 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f7f6f2;--card:#fff;--ink:#1d2433;--muted:#667085;--navy:#1f3a6b;--accent:#c8102e;--cue:#eef2f8;--fill:#fff4d6;--line:#e4e2dc;--fs:20px}
+  body.dark{--bg:#111418;--card:#1b2028;--ink:#e8eaed;--muted:#9aa3af;--navy:#8fb3ff;--cue:#232b38;--fill:#3a3218;--line:#2c333d}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Sarabun",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
+  header{position:sticky;top:0;z-index:5;background:var(--navy);color:#fff;padding:10px 14px}
+  body.dark header{background:#0b1d3d}
+  .top{display:flex;align-items:center;gap:8px}
+  .top h1{font-size:16px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+  .top button{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:8px;padding:6px 10px;font:inherit;font-size:14px;cursor:pointer}
+  nav{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  nav a{flex:0 0 auto;color:#fff;text-decoration:none;font-size:13px;background:rgba(255,255,255,.12);border-radius:999px;padding:4px 10px;white-space:nowrap}
+  nav a.on{background:#fff;color:var(--navy);font-weight:700}
+  nav a.now{outline:2px solid #ffd166}
+  main{max-width:760px;margin:0 auto;padding:16px 14px 110px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .time{color:var(--accent);font-weight:700;font-size:15px}
+  h2{font-size:calc(var(--fs) + 4px);line-height:1.35;margin:4px 0 2px}
+  .en{color:var(--muted);font-style:italic;font-size:15px;margin:0 0 6px}
+  .spk{font-size:15px;font-weight:600;color:var(--navy);margin:0 0 12px}
+  .say{font-size:var(--fs);margin:0 0 14px}
+  .cue{font-size:15px;color:var(--muted);background:var(--cue);border-radius:8px;padding:6px 10px;margin:4px 0 12px}
+  .cue::before{content:"▸ "}
+  .fill{font-size:15px;background:var(--fill);border-left:4px solid #e0a100;border-radius:6px;padding:6px 10px;margin:4px 0 12px}
+  .fill::before{content:"เติม/เช็ก: ";font-weight:700}
+  .bk{background:var(--fill);border-radius:3px;padding:0 3px}
+  .pager{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line)}
+  .pager button{flex:1;font:inherit;font-size:16px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+  .pager button.main{background:var(--navy);color:#fff;border:0}
+  body.dark .pager button.main{color:#0b1d3d}
+  .pager button:disabled{opacity:.35}
+  details{margin-bottom:14px}
+  summary{cursor:pointer;font-weight:700;color:var(--accent)}
+  ol{padding-left:22px;margin:8px 0 0}
+  ol li{font-size:15px;margin-bottom:6px}
+  .list a{display:block;text-decoration:none;color:var(--ink);padding:10px 0;border-bottom:1px solid var(--line)}
+  .list a b{color:var(--accent);font-size:14px;margin-right:6px}
+  .foot{color:var(--muted);font-size:13px;margin-top:14px}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>MPAT 2026 · พิธีกร</h1>
+    <button id="nowBtn" title="ไปที่ session ตามเวลาตอนนี้">ตอนนี้</button>
+    <button id="fsBtn" title="ขนาดตัวอักษร">ก±</button>
+    <button id="darkBtn" title="โหมดมืด">◐</button>
+  </div>
+  <nav id="nav"></nav>
+</header>
+<main id="main"></main>
+<div class="pager">
+  <button id="prev">‹ ก่อนหน้า</button>
+  <button id="next" class="main">ถัดไป ›</button>
+</div>
+<script src="sessions.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const esc = t => t.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const mark = t => esc(t).replace(/\[([^\]]+)\]/g,'<span class="bk">[$1]</span>');
+const mins = s => { const [h,m] = s.split(":").map(Number); return h*60+m; };
+const fmt = s => s.replace(":", ".");
+const store = { get:k=>{try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}} };
+
+function nowId(){
+  const d = new Date(), m = d.getHours()*60 + d.getMinutes();
+  const s = SESSIONS.find(x => m >= mins(x.start) && m < mins(x.end));
+  return s ? s.id : null;
+}
+function idx(){ const h = location.hash.slice(1); return SESSIONS.findIndex(s => s.id === h); }
+
+function renderNav(cur){
+  const n = nowId();
+  $("#nav").innerHTML = '<a href="#" class="'+(cur<0?"on":"")+'">ภาพรวม</a>' +
+    SESSIONS.map((s,i)=>'<a href="#'+s.id+'" class="'+(i===cur?"on ":"")+(s.id===n?"now":"")+'">'+fmt(s.start)+'</a>').join("");
+  const on = $("#nav a.on"); if (on) on.scrollIntoView({inline:"center",block:"nearest"});
+}
+
+function renderHome(){
+  $("#main").innerHTML =
+    '<div class="card"><div class="time">วันศุกร์ที่ 13 พฤศจิกายน 2569</div>' +
+    '<h2>Partnering Across the System: From Access to Value-Based Healthcare</h2>' +
+    '<p class="en">ผนึกพลังทุกภาคส่วน จากการเข้าถึงสู่ระบบสุขภาพเชิงคุณค่า</p>' +
+    '<details open><summary>เช็กก่อนขึ้นเวที ('+CHECKLIST.length+' ข้อ)</summary><ol>' +
+    CHECKLIST.map(c=>'<li>'+mark(c)+'</li>').join("") + '</ol></details>' +
+    '<div class="list">' + SESSIONS.map(s=>'<a href="#'+s.id+'"><b>'+fmt(s.start)+'–'+fmt(s.end)+'</b>'+esc(s.title)+'</a>').join("") + '</div>' +
+    '<p class="foot">ข้อความใน [ ] คือช่องที่ต้องเติมหรือเช็กหน้างาน · พื้นสีฟ้าคือคิวบนเวที ไม่ต้องอ่านออกเสียง · ที่มา: กำหนดการฉบับปรับปรุง 16 ก.ย. 2569</p></div>';
+}
+
+function renderSession(i){
+  const s = SESSIONS[i];
+  const body = s.lines.map(([k,t]) => '<p class="'+k+'">'+(k==="say"?mark(t):esc(t))+'</p>').join("");
+  $("#main").innerHTML = '<div class="card"><div class="time">'+fmt(s.start)+'–'+fmt(s.end)+' น. · '+(i+1)+'/'+SESSIONS.length+'</div>' +
+    '<h2>'+esc(s.title)+'</h2><p class="en">'+esc(s.en)+'</p>' + (s.speaker?'<p class="spk">'+esc(s.speaker)+'</p>':'') + body + '</div>';
+}
+
+function render(){
+  const i = idx();
+  renderNav(i);
+  i < 0 ? renderHome() : renderSession(i);
+  $("#prev").disabled = i < 0;
+  $("#next").disabled = i === SESSIONS.length-1;
+  $("#next").textContent = i < 0 ? "เริ่ม session แรก ›" : "ถัดไป ›";
+  window.scrollTo(0,0);
+}
+function go(d){ const i = idx() + d; location.hash = i < 0 ? "" : SESSIONS[Math.min(i,SESSIONS.length-1)].id; }
+
+$("#prev").onclick = () => go(-1);
+$("#next").onclick = () => go(1);
+$("#nowBtn").onclick = () => { const n = nowId(); if (n) location.hash = n; else alertless(); };
+function alertless(){ $("#nowBtn").textContent = "นอกเวลา"; setTimeout(()=>$("#nowBtn").textContent="ตอนนี้",1500); }
+const sizes = [18,20,23,26];
+let fs = Number(store.get("fs")) || 20;
+const applyFs = () => document.documentElement.style.setProperty("--fs", fs+"px");
+$("#fsBtn").onclick = () => { fs = sizes[(sizes.indexOf(fs)+1) % sizes.length]; store.set("fs",fs); applyFs(); };
+$("#darkBtn").onclick = () => { document.body.classList.toggle("dark"); store.set("dark", document.body.classList.contains("dark")?"1":""); };
+if (store.get("dark")) document.body.classList.add("dark");
+applyFs();
+document.addEventListener("keydown", e => { if (e.key==="ArrowRight") go(1); if (e.key==="ArrowLeft") go(-1); });
+let tx=null; document.addEventListener("touchstart",e=>{tx=e.target.closest("header")?null:e.touches[0].clientX},{passive:true});
+document.addEventListener("touchend",e=>{ if(tx===null) return; const dx=e.changedTouches[0].clientX-tx; if(Math.abs(dx)>80) go(dx<0?1:-1); tx=null; },{passive:true});
+window.addEventListener("hashchange", render);
+setInterval(()=>renderNav(idx()), 60000);
+render();
+</script>
+</body>
+</html>
