@@ -90,8 +90,6 @@ function renderHome(){
     '<div class="card"><div class="time">วันศุกร์ที่ 13 พฤศจิกายน 2569</div>' +
     '<h2>Partnering Across the System: From Access to Value-Based Healthcare</h2>' +
     '<p class="en">ผนึกพลังทุกภาคส่วน จากการเข้าถึงสู่ระบบสุขภาพเชิงคุณค่า</p>' +
-    '<details open><summary>เช็กก่อนขึ้นเวที ('+CHECKLIST.length+' ข้อ)</summary><ol>' +
-    CHECKLIST.map(c=>'<li>'+mark(c)+'</li>').join("") + '</ol></details>' +
     '<div class="list">' + SESSIONS.map(s=>'<a href="#'+s.id+'"><b>'+fmt(s.start)+'–'+fmt(s.end)+'</b>'+esc(s.title)+'</a>').join("") + '</div>' +
     '<p class="foot">ข้อความใน [ ] คือช่องที่ต้องเติมหรือเช็กหน้างาน · พื้นสีฟ้าคือคิวบนเวที ไม่ต้องอ่านออกเสียง · ที่มา: กำหนดการฉบับปรับปรุง 16 ก.ย. 2569</p></div>';
 }
